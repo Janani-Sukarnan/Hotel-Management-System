@@ -116,6 +116,27 @@ namespace HotelManagementEFCore.Services
 
             return true;
         }
+
+
+        public bool IsRoomAvailable(int roomId, DateTime checkIn, DateTime checkOut)
+        {
+            if (checkOut.Date <= checkIn.Date ||
+                checkIn.Date < DateTime.Today)
+                return false;
+
+            bool roomExists = _context.Rooms.Any(r => r.Id == roomId);
+
+            if (!roomExists)
+                return false;
+
+            bool hasOverlap = _context.Bookings.Any(b =>
+                b.RoomId == roomId &&
+                b.Status == "Confirmed" &&
+                checkIn.Date < b.CheckOutDate.Date &&
+                checkOut.Date > b.CheckInDate.Date);
+
+            return !hasOverlap;
+        }
     }
-}
+    }
         

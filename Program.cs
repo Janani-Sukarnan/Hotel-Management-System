@@ -62,7 +62,8 @@ while (running)
     Console.WriteLine("9. Display All Bookings");
     Console.WriteLine("10. Search Booking by ID");
     Console.WriteLine("11. Cancel Booking");
-    Console.WriteLine("12. Exit");
+    Console.WriteLine("12. Check Room Availability by Date");
+    Console.WriteLine("13. Exit");
     Console.Write("Enter your choice: ");
 
     string? choice = Console.ReadLine();
@@ -345,7 +346,54 @@ case "10":
                 : "Cancellation failed. Check the booking ID and status.");
 
             break;
+
         case "12":
+            Console.Write("Enter room ID: ");
+
+            if (!int.TryParse(Console.ReadLine(), out int availabilityRoomId))
+            {
+                Console.WriteLine("Invalid room ID.");
+                break;
+            }
+
+            Console.Write("Enter check-in date (yyyy-MM-dd): ");
+
+            if (!DateTime.TryParseExact(
+                Console.ReadLine(),
+                "yyyy-MM-dd",
+                System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.None,
+                out DateTime availabilityCheckIn))
+            {
+                Console.WriteLine("Invalid check-in date.");
+                break;
+            }
+
+            Console.Write("Enter check-out date (yyyy-MM-dd): ");
+
+            if (!DateTime.TryParseExact(
+                Console.ReadLine(),
+                "yyyy-MM-dd",
+                System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.None,
+                out DateTime availabilityCheckOut))
+            {
+                Console.WriteLine("Invalid check-out date.");
+                break;
+            }
+
+            bool isAvailable = bookingService.IsRoomAvailable(
+                availabilityRoomId,
+                availabilityCheckIn,
+                availabilityCheckOut);
+
+            Console.WriteLine(isAvailable
+                ? "Room is available for the selected dates!"
+                : "Room is unavailable or the dates are invalid.");
+
+            break;
+
+        case "13":
             running = false;
             Console.WriteLine("Thank you for using Hotel Management System!");
             break;
