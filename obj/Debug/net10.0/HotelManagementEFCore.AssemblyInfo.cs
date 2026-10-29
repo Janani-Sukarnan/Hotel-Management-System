@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("HotelManagementEFCore")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+74b09328a26e0d37a54ae3a5a950e63994570ac7")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e74ad0a8beba5b45fe4400f4486bce36ea58b40c")]
 [assembly: System.Reflection.AssemblyProductAttribute("HotelManagementEFCore")]
 [assembly: System.Reflection.AssemblyTitleAttribute("HotelManagementEFCore")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

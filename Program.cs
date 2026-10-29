@@ -11,6 +11,8 @@ var roomService = new RoomService(roomRepository);
 
 var guestRepository = new GuestRepository(db);
 var guestService = new GuestService(guestRepository);
+var bookingRepository = new BookingRepository(db);
+var bookingService = new BookingService(db, bookingRepository);
 
 // Seed rooms only when no rooms exist.
 if (!roomService.GetAllRooms().Any())
@@ -56,7 +58,10 @@ while (running)
     Console.WriteLine("5. Register Guest");
     Console.WriteLine("6. Display All Guests");
     Console.WriteLine("7. Search Guest by ID");
-    Console.WriteLine("8. Exit");
+    Console.WriteLine("8. Create Booking");
+    Console.WriteLine("9. Display All Bookings");
+    Console.WriteLine("10. Cancel Booking");
+    Console.WriteLine("11. Exit");
     Console.Write("Enter your choice: ");
 
     string? choice = Console.ReadLine();
@@ -212,7 +217,101 @@ while (running)
 
             break;
 
+
         case "8":
+            Console.Write("Enter guest ID: ");
+
+            if (!int.TryParse(Console.ReadLine(), out int bookingGuestId))
+            {
+                Console.WriteLine("Invalid guest ID.");
+                break;
+            }
+
+            Console.Write("Enter room ID: ");
+
+            if (!int.TryParse(Console.ReadLine(), out int bookingRoomId))
+            {
+                Console.WriteLine("Invalid room ID.");
+                break;
+            }
+
+            Console.Write("Enter check-in date (yyyy-MM-dd): ");
+
+            if (!DateTime.TryParseExact(
+                Console.ReadLine(),
+                "yyyy-MM-dd",
+                System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.None,
+                out DateTime checkIn))
+            {
+                Console.WriteLine("Invalid check-in date.");
+                break;
+            }
+
+            Console.Write("Enter check-out date (yyyy-MM-dd): ");
+
+            if (!DateTime.TryParseExact(
+                Console.ReadLine(),
+                "yyyy-MM-dd",
+                System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.None,
+                out DateTime checkOut))
+            {
+                Console.WriteLine("Invalid check-out date.");
+                break;
+            }
+
+            bool booked = bookingService.CreateBooking(
+                bookingGuestId,
+                bookingRoomId,
+                checkIn,
+                checkOut);
+
+            Console.WriteLine(booked
+                ? "Booking created successfully!"
+                : "Booking failed. Check guest, room, dates, and availability.");
+
+            break;
+
+        case "9":
+            var bookings = bookingService.GetAllBookings();
+
+            Console.WriteLine("\n========== BOOKING RECORDS ==========");
+
+            foreach (var booking in bookings)
+            {
+                Console.WriteLine($"Booking ID: {booking.Id}");
+                Console.WriteLine($"Guest: {booking.Guest?.FullName}");
+                Console.WriteLine($"Room: {booking.Room?.RoomNumber}");
+                Console.WriteLine($"Check-in: {booking.CheckInDate:yyyy-MM-dd}");
+                Console.WriteLine($"Check-out: {booking.CheckOutDate:yyyy-MM-dd}");
+                Console.WriteLine($"Total Amount: {booking.TotalAmount:C}");
+                Console.WriteLine($"Status: {booking.Status}");
+                Console.WriteLine("-------------------------------------");
+            }
+
+            if (bookings.Count == 0)
+                Console.WriteLine("No bookings found.");
+
+            break;
+
+        case "10":
+            Console.Write("Enter booking ID to cancel: ");
+
+            if (!int.TryParse(Console.ReadLine(), out int cancelId))
+            {
+                Console.WriteLine("Invalid booking ID.");
+                break;
+            }
+
+            bool cancelled = bookingService.CancelBooking(cancelId);
+
+            Console.WriteLine(cancelled
+                ? "Booking cancelled successfully! Room is now available."
+                : "Cancellation failed. Check the booking ID and status.");
+
+            break;
+        case "11":
             running = false;
             Console.WriteLine("Thank you for using Hotel Management System!");
             break;
