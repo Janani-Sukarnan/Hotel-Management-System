@@ -60,8 +60,9 @@ while (running)
     Console.WriteLine("7. Search Guest by ID");
     Console.WriteLine("8. Create Booking");
     Console.WriteLine("9. Display All Bookings");
-    Console.WriteLine("10. Cancel Booking");
-    Console.WriteLine("11. Exit");
+    Console.WriteLine("10. Search Booking by ID");
+    Console.WriteLine("11. Cancel Booking");
+    Console.WriteLine("12. Exit");
     Console.Write("Enter your choice: ");
 
     string? choice = Console.ReadLine();
@@ -294,8 +295,41 @@ while (running)
                 Console.WriteLine("No bookings found.");
 
             break;
+        
 
-        case "10":
+
+case "10":
+                    Console.Write("Enter booking ID to search: ");
+
+                    if (!int.TryParse(Console.ReadLine(), out int searchBookingId))
+                    {
+                        Console.WriteLine("Invalid booking ID.");
+                        break;
+                    }
+
+                    var searchedBooking = bookingService.SearchBooking(searchBookingId);
+
+                    if (searchedBooking == null)
+                    {
+                        Console.WriteLine("Booking not found.");
+                    }
+                    else
+                    {
+                        Console.WriteLine("\n========== BOOKING DETAILS ==========");
+                        Console.WriteLine($"Booking ID  : {searchedBooking.Id}");
+                        Console.WriteLine($"Guest Name  : {searchedBooking.Guest?.FullName ?? "Unknown"}");
+                        Console.WriteLine($"Room Number : {searchedBooking.Room?.RoomNumber ?? "Unknown"}");
+                        Console.WriteLine($"Check-in    : {searchedBooking.CheckInDate:yyyy-MM-dd}");
+                        Console.WriteLine($"Check-out   : {searchedBooking.CheckOutDate:yyyy-MM-dd}");
+                        Console.WriteLine($"Total Amount: {searchedBooking.TotalAmount:C}");
+                        Console.WriteLine($"Status      : {searchedBooking.Status}");
+                        Console.WriteLine("=====================================");
+                    }
+
+                    break;
+
+
+                case "11":
             Console.Write("Enter booking ID to cancel: ");
 
             if (!int.TryParse(Console.ReadLine(), out int cancelId))
@@ -311,7 +345,7 @@ while (running)
                 : "Cancellation failed. Check the booking ID and status.");
 
             break;
-        case "11":
+        case "12":
             running = false;
             Console.WriteLine("Thank you for using Hotel Management System!");
             break;

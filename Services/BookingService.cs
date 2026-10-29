@@ -2,6 +2,7 @@
 using HotelManagementEFCore.Data;
 using HotelManagementEFCore.Models;
 using HotelManagementEFCore.Repositories;
+using Microsoft.EntityFrameworkCore;
 
 namespace HotelManagementEFCore.Services
 {
@@ -17,9 +18,19 @@ namespace HotelManagementEFCore.Services
             _context = context;
             _repository = repository;
         }
+        public Booking? SearchBooking(int bookingId)
+        {
+            if (bookingId <= 0)
+                return null;
 
-
-public bool CancelBooking(int bookingId)
+            return _repository.GetBookingById(bookingId);
+        }
+        public Booking? GetBookingById(int id) =>
+    _context.Bookings
+        .Include(b => b.Guest)
+        .Include(b => b.Room)
+        .FirstOrDefault(b => b.Id == id);
+        public bool CancelBooking(int bookingId)
         {
             var booking = _repository.GetBookingById(bookingId);
 
