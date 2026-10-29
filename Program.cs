@@ -70,17 +70,25 @@ while (running)
 
     switch (choice)
     {
+
+
         case "1":
             var rooms = roomService.GetAllRooms();
 
-            Console.WriteLine("\nID\tRoom No\tType\t\tPrice/Night\tAvailable");
+            Console.WriteLine(
+                "\nID\tRoom No\tType\t\tPrice/Night\tAvailable Today?");
 
             foreach (var room in rooms)
             {
+                bool availableToday = bookingService.IsRoomAvailable(
+                    room.Id,
+                    DateTime.Today,
+                    DateTime.Today.AddDays(1));
+
                 Console.WriteLine(
                     $"{room.Id}\t{room.RoomNumber}\t" +
                     $"{room.RoomType}\t\t{room.PricePerNight:C}\t" +
-                    $"{(room.IsAvailable ? "Yes" : "No")}");
+                    $"{(availableToday ? "Yes" : "No")}");
             }
 
             if (rooms.Count == 0)
