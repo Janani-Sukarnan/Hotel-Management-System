@@ -30,33 +30,38 @@ namespace HotelManagementEFCore.Services
         .Include(b => b.Guest)
         .Include(b => b.Room)
         .FirstOrDefault(b => b.Id == id);
+
+
         public bool CancelBooking(int bookingId)
         {
             var booking = _repository.GetBookingById(bookingId);
 
-            if (booking == null)
+            if (booking == null || booking.Status != "Confirmed")
                 return false;
 
-            if (booking.Status != "Confirmed")
+            bool cancelled = _repository.CancelBooking(bookingId);
+
+            if (!cancelled)
                 return false;
 
-            var result = _repository.CancelBooking(bookingId);
-
-            if (!result)
-                return false;
+            // Check whether another confirmed booking remains for this room.
+            bool hasOtherConfirmedBooking = _context.Bookings.Any(b =>
+                b.RoomId == booking.RoomId &&
+                b.Status == "Confirmed" &&
+                b.Id != bookingId);
 
             var room = _context.Rooms.Find(booking.RoomId);
 
             if (room != null)
             {
-                room.IsAvailable = true;
+                room.IsAvailable = !hasOtherConfirmedBooking;
                 _context.SaveChanges();
             }
 
             return true;
         }
 
-        
+
 
         public List<Booking> GetAllBookings()
         {
@@ -69,41 +74,48 @@ namespace HotelManagementEFCore.Services
             DateTime checkIn,
             DateTime checkOut)
         {
+            // Validate booking dates.
             if (checkIn.Date < DateTime.Today)
                 return false;
 
             if (checkOut.Date <= checkIn.Date)
                 return false;
 
+            // Check that the guest and room exist.
             var guest = _context.Guests.Find(guestId);
             var room = _context.Rooms.Find(roomId);
 
             if (guest == null || room == null)
                 return false;
 
-            if (!room.IsAvailable)
+            // Prevent overlapping confirmed bookings for this room.
+            bool hasOverlap = _context.Bookings.Any(b =>
+                b.RoomId == roomId &&
+                b.Status == "Confirmed" &&
+                checkIn.Date < b.CheckOutDate.Date &&
+                checkOut.Date > b.CheckInDate.Date);
+
+            if (hasOverlap)
                 return false;
 
+            // Calculate the booking amount.
             int nights = (checkOut.Date - checkIn.Date).Days;
-
             decimal total = nights * room.PricePerNight;
 
             var booking = new Booking
             {
                 GuestId = guestId,
                 RoomId = roomId,
-                CheckInDate = checkIn,
-                CheckOutDate = checkOut,
+                CheckInDate = checkIn.Date,
+                CheckOutDate = checkOut.Date,
                 TotalAmount = total,
                 Status = "Confirmed"
             };
 
-            room.IsAvailable = false;
-
             _repository.AddBooking(booking);
-            _context.SaveChanges();
 
             return true;
         }
     }
 }
+        
