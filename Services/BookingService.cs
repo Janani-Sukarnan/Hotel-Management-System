@@ -10,13 +10,16 @@ namespace HotelManagementEFCore.Services
     {
         private readonly HotelDbContext _context;
         private readonly BookingRepository _repository;
+        private readonly AuditLogService _auditLogService;
 
         public BookingService(
             HotelDbContext context,
-            BookingRepository repository)
+            BookingRepository repository,
+            AuditLogService auditLogService)
         {
             _context = context;
             _repository = repository;
+            _auditLogService = auditLogService;
         }
 
         public async Task<List<Booking>> GetAllBookingsAsync()
@@ -79,25 +82,33 @@ namespace HotelManagementEFCore.Services
 
             await _repository.AddBookingAsync(booking);
 
+            await _auditLogService.LogEventAsync(
+                "Booking Created",
+                $"Booking ID {booking.Id} was created for Guest ID {guestId}, Room {room.RoomNumber}. Total amount: {total}."
+            );
+
             return true;
         }
 
         public async Task<bool> CancelBookingAsync(int bookingId)
         {
-            var booking = await _repository.GetBookingByIdAsync(bookingId);
+            var booking =
+                await _repository.GetBookingByIdAsync(bookingId);
 
             if (booking == null || booking.Status != "Confirmed")
                 return false;
 
-            bool cancelled = await _repository.CancelBookingAsync(bookingId);
+            bool cancelled =
+                await _repository.CancelBookingAsync(bookingId);
 
             if (!cancelled)
                 return false;
 
-            bool hasOtherConfirmedBooking = await _context.Bookings.AnyAsync(b =>
-                b.RoomId == booking.RoomId &&
-                b.Status == "Confirmed" &&
-                b.Id != bookingId);
+            bool hasOtherConfirmedBooking =
+                await _context.Bookings.AnyAsync(b =>
+                    b.RoomId == booking.RoomId &&
+                    b.Status == "Confirmed" &&
+                    b.Id != bookingId);
 
             var room = await _context.Rooms.FindAsync(booking.RoomId);
 
@@ -106,6 +117,11 @@ namespace HotelManagementEFCore.Services
                 room.IsAvailable = !hasOtherConfirmedBooking;
                 await _context.SaveChangesAsync();
             }
+
+            await _auditLogService.LogEventAsync(
+                "Booking Cancelled",
+                $"Booking ID {bookingId} was cancelled successfully."
+            );
 
             return true;
         }
@@ -119,8 +135,8 @@ namespace HotelManagementEFCore.Services
                 checkIn.Date < DateTime.Today)
                 return false;
 
-            bool roomExists = await _context.Rooms
-                .AnyAsync(r => r.Id == roomId);
+            bool roomExists =
+                await _context.Rooms.AnyAsync(r => r.Id == roomId);
 
             if (!roomExists)
                 return false;

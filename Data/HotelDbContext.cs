@@ -13,6 +13,9 @@ namespace HotelManagementEFCore.Data
 
         public DbSet<Room> Rooms => Set<Room>();
 
+        public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+
+
         public DbSet<Guest> Guests => Set<Guest>();
 
         public DbSet<Booking> Bookings => Set<Booking>();

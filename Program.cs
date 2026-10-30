@@ -7,14 +7,25 @@ using HotelManagementEFCore.Menus;
 
 using var db = new HotelDbContextFactory().CreateDbContext(args);
 
+// Audit Log
+var auditLogRepository = new AuditLogRepository(db);
+var auditLogService = new AuditLogService(auditLogRepository);
+
+// Room
 var roomRepository = new RoomRepository(db);
-var roomService = new RoomService(roomRepository);
+var roomService = new RoomService(roomRepository, auditLogService);
 
+// Guest
 var guestRepository = new GuestRepository(db);
-var guestService = new GuestService(guestRepository);
+var guestService = new GuestService(guestRepository, auditLogService);
 
+// Booking
 var bookingRepository = new BookingRepository(db);
-var bookingService = new BookingService(db, bookingRepository);
+var bookingService = new BookingService(
+    db,
+    bookingRepository,
+    auditLogService
+);
 
 // Seed rooms only when no rooms exist.
 var existingRooms = await roomService.GetAllRoomsAsync();
@@ -53,6 +64,7 @@ if (!existingRooms.Any())
 var menu = new HotelMenu(
     roomService,
     guestService,
-    bookingService);
+    bookingService
+);
 
 await menu.RunAsync();

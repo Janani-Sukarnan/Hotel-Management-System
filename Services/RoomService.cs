@@ -7,10 +7,14 @@ namespace HotelManagementEFCore.Services
     public class RoomService
     {
         private readonly RoomRepository _repository;
+        private readonly AuditLogService _auditLogService;
 
-        public RoomService(RoomRepository repository)
+        public RoomService(
+            RoomRepository repository,
+            AuditLogService auditLogService)
         {
             _repository = repository;
+            _auditLogService = auditLogService;
         }
 
         public async Task<List<Room>> GetAllRoomsAsync()
@@ -37,6 +41,11 @@ namespace HotelManagementEFCore.Services
 
             await _repository.AddRoomAsync(room);
 
+            await _auditLogService.LogEventAsync(
+                "Room Added",
+                $"Room {room.RoomNumber} ({room.RoomType}) was added successfully."
+            );
+
             return true;
         }
 
@@ -53,7 +62,17 @@ namespace HotelManagementEFCore.Services
             if (id <= 0)
                 return false;
 
-            return await _repository.DeleteRoomAsync(id);
+            bool deleted = await _repository.DeleteRoomAsync(id);
+
+            if (deleted)
+            {
+                await _auditLogService.LogEventAsync(
+                    "Room Deleted",
+                    $"Room with ID {id} was deleted successfully."
+                );
+            }
+
+            return deleted;
         }
     }
 }
