@@ -1,6 +1,7 @@
 ﻿
 using HotelManagementEFCore.Models;
 using HotelManagementEFCore.Services;
+using System.Globalization;
 
 namespace HotelManagementEFCore.Menus
 {
@@ -20,9 +21,10 @@ namespace HotelManagementEFCore.Menus
             this.bookingService = bookingService;
         }
 
-        public void Run()
+        public async Task RunAsync()
         {
             bool running = true;
+
             while (running)
             {
                 Console.WriteLine("\n========== HOTEL MANAGEMENT SYSTEM ==========");
@@ -45,20 +47,19 @@ namespace HotelManagementEFCore.Menus
 
                 switch (choice)
                 {
-
-
                     case "1":
-                        var rooms = roomService.GetAllRooms();
+                        var rooms = await roomService.GetAllRoomsAsync();
 
                         Console.WriteLine(
                             "\nID\tRoom No\tType\t\tPrice/Night\tAvailable Today?");
 
                         foreach (var room in rooms)
                         {
-                            bool availableToday = bookingService.IsRoomAvailable(
-                                room.Id,
-                                DateTime.Today,
-                                DateTime.Today.AddDays(1));
+                            bool availableToday =
+                                await bookingService.IsRoomAvailableAsync(
+                                    room.Id,
+                                    DateTime.Today,
+                                    DateTime.Today.AddDays(1));
 
                             Console.WriteLine(
                                 $"{room.Id}\t{room.RoomNumber}\t" +
@@ -75,7 +76,8 @@ namespace HotelManagementEFCore.Menus
                         Console.Write("Enter room number: ");
                         string roomNumber = Console.ReadLine() ?? "";
 
-                        var foundRoom = roomService.SearchRoom(roomNumber);
+                        var foundRoom =
+                            await roomService.SearchRoomAsync(roomNumber);
 
                         if (foundRoom != null)
                         {
@@ -107,7 +109,7 @@ namespace HotelManagementEFCore.Menus
                             break;
                         }
 
-                        bool added = roomService.AddRoom(new Room
+                        bool added = await roomService.AddRoomAsync(new Room
                         {
                             RoomNumber = newNumber.Trim(),
                             RoomType = newType.Trim(),
@@ -129,7 +131,7 @@ namespace HotelManagementEFCore.Menus
                             break;
                         }
 
-                        bool deleted = roomService.DeleteRoom(roomId);
+                        bool deleted = await roomService.DeleteRoomAsync(roomId);
 
                         Console.WriteLine(deleted
                             ? "Room deleted successfully!"
@@ -147,7 +149,7 @@ namespace HotelManagementEFCore.Menus
                         Console.Write("Enter email: ");
                         string email = Console.ReadLine() ?? "";
 
-                        bool registered = guestService.RegisterGuest(new Guest
+                        bool registered = await guestService.RegisterGuestAsync(new Guest
                         {
                             FullName = name.Trim(),
                             PhoneNumber = phone.Trim(),
@@ -161,7 +163,7 @@ namespace HotelManagementEFCore.Menus
                         break;
 
                     case "6":
-                        var guests = guestService.GetAllGuests();
+                        var guests = await guestService.GetAllGuestsAsync();
 
                         Console.WriteLine("\nID\tGuest Name\t\tPhone\t\tEmail");
 
@@ -186,7 +188,8 @@ namespace HotelManagementEFCore.Menus
                             break;
                         }
 
-                        var foundGuest = guestService.GetGuestById(guestId);
+                        var foundGuest =
+                            await guestService.GetGuestByIdAsync(guestId);
 
                         if (foundGuest != null)
                         {
@@ -201,7 +204,6 @@ namespace HotelManagementEFCore.Menus
                         }
 
                         break;
-
 
                     case "8":
                         Console.Write("Enter guest ID: ");
@@ -225,8 +227,8 @@ namespace HotelManagementEFCore.Menus
                         if (!DateTime.TryParseExact(
                             Console.ReadLine(),
                             "yyyy-MM-dd",
-                            System.Globalization.CultureInfo.InvariantCulture,
-                            System.Globalization.DateTimeStyles.None,
+                            CultureInfo.InvariantCulture,
+                            DateTimeStyles.None,
                             out DateTime checkIn))
                         {
                             Console.WriteLine("Invalid check-in date.");
@@ -238,15 +240,15 @@ namespace HotelManagementEFCore.Menus
                         if (!DateTime.TryParseExact(
                             Console.ReadLine(),
                             "yyyy-MM-dd",
-                            System.Globalization.CultureInfo.InvariantCulture,
-                            System.Globalization.DateTimeStyles.None,
+                            CultureInfo.InvariantCulture,
+                            DateTimeStyles.None,
                             out DateTime checkOut))
                         {
                             Console.WriteLine("Invalid check-out date.");
                             break;
                         }
 
-                        bool booked = bookingService.CreateBooking(
+                        bool booked = await bookingService.CreateBookingAsync(
                             bookingGuestId,
                             bookingRoomId,
                             checkIn,
@@ -259,7 +261,7 @@ namespace HotelManagementEFCore.Menus
                         break;
 
                     case "9":
-                        var bookings = bookingService.GetAllBookings();
+                        var bookings = await bookingService.GetAllBookingsAsync();
 
                         Console.WriteLine("\n========== BOOKING RECORDS ==========");
 
@@ -280,8 +282,6 @@ namespace HotelManagementEFCore.Menus
 
                         break;
 
-
-
                     case "10":
                         Console.Write("Enter booking ID to search: ");
 
@@ -291,7 +291,8 @@ namespace HotelManagementEFCore.Menus
                             break;
                         }
 
-                        var searchedBooking = bookingService.SearchBooking(searchBookingId);
+                        var searchedBooking =
+                            await bookingService.SearchBookingAsync(searchBookingId);
 
                         if (searchedBooking == null)
                         {
@@ -312,7 +313,6 @@ namespace HotelManagementEFCore.Menus
 
                         break;
 
-
                     case "11":
                         Console.Write("Enter booking ID to cancel: ");
 
@@ -322,10 +322,11 @@ namespace HotelManagementEFCore.Menus
                             break;
                         }
 
-                        bool cancelled = bookingService.CancelBooking(cancelId);
+                        bool cancelled =
+                            await bookingService.CancelBookingAsync(cancelId);
 
                         Console.WriteLine(cancelled
-                            ? "Booking cancelled successfully! Room is now available."
+                            ? "Booking cancelled successfully! Room availability has been updated."
                             : "Cancellation failed. Check the booking ID and status.");
 
                         break;
@@ -344,8 +345,8 @@ namespace HotelManagementEFCore.Menus
                         if (!DateTime.TryParseExact(
                             Console.ReadLine(),
                             "yyyy-MM-dd",
-                            System.Globalization.CultureInfo.InvariantCulture,
-                            System.Globalization.DateTimeStyles.None,
+                            CultureInfo.InvariantCulture,
+                            DateTimeStyles.None,
                             out DateTime availabilityCheckIn))
                         {
                             Console.WriteLine("Invalid check-in date.");
@@ -357,18 +358,19 @@ namespace HotelManagementEFCore.Menus
                         if (!DateTime.TryParseExact(
                             Console.ReadLine(),
                             "yyyy-MM-dd",
-                            System.Globalization.CultureInfo.InvariantCulture,
-                            System.Globalization.DateTimeStyles.None,
+                            CultureInfo.InvariantCulture,
+                            DateTimeStyles.None,
                             out DateTime availabilityCheckOut))
                         {
                             Console.WriteLine("Invalid check-out date.");
                             break;
                         }
 
-                        bool isAvailable = bookingService.IsRoomAvailable(
-                            availabilityRoomId,
-                            availabilityCheckIn,
-                            availabilityCheckOut);
+                        bool isAvailable =
+                            await bookingService.IsRoomAvailableAsync(
+                                availabilityRoomId,
+                                availabilityCheckIn,
+                                availabilityCheckOut);
 
                         Console.WriteLine(isAvailable
                             ? "Room is available for the selected dates!"

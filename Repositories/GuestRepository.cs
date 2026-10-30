@@ -1,6 +1,7 @@
 ﻿
 using HotelManagementEFCore.Data;
 using HotelManagementEFCore.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace HotelManagementEFCore.Repositories
 {
@@ -13,24 +14,25 @@ namespace HotelManagementEFCore.Repositories
             _context = context;
         }
 
-        public List<Guest> GetAllGuests()
+        public async Task<List<Guest>> GetAllGuestsAsync()
         {
-            return _context.Guests
+            return await _context.Guests
+                .AsNoTracking()
                 .OrderBy(g => g.Id)
-                .ToList();
+                .ToListAsync();
         }
 
-        public Guest? GetGuestById(int id)
+        public async Task<Guest?> GetGuestByIdAsync(int id)
         {
-            return _context.Guests
-                .FirstOrDefault(g => g.Id == id);
+            return await _context.Guests
+                .AsNoTracking()
+                .FirstOrDefaultAsync(g => g.Id == id);
         }
 
-        public void AddGuest(Guest guest)
+        public async Task AddGuestAsync(Guest guest)
         {
-            _context.Guests.Add(guest);
-            _context.SaveChanges();
+            await _context.Guests.AddAsync(guest);
+            await _context.SaveChangesAsync();
         }
     }
 }
-

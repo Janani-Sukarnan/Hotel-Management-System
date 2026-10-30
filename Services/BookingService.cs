@@ -18,78 +18,44 @@ namespace HotelManagementEFCore.Services
             _context = context;
             _repository = repository;
         }
-        public Booking? SearchBooking(int bookingId)
+
+        public async Task<List<Booking>> GetAllBookingsAsync()
         {
-            if (bookingId <= 0)
+            return await _repository.GetAllBookingsAsync();
+        }
+
+        public async Task<Booking?> GetBookingByIdAsync(int id)
+        {
+            if (id <= 0)
                 return null;
 
-            return _repository.GetBookingById(bookingId);
+            return await _repository.GetBookingByIdAsync(id);
         }
-        public Booking? GetBookingById(int id) =>
-    _context.Bookings
-        .Include(b => b.Guest)
-        .Include(b => b.Room)
-        .FirstOrDefault(b => b.Id == id);
 
-
-        public bool CancelBooking(int bookingId)
+        public async Task<Booking?> SearchBookingAsync(int bookingId)
         {
-            var booking = _repository.GetBookingById(bookingId);
-
-            if (booking == null || booking.Status != "Confirmed")
-                return false;
-
-            bool cancelled = _repository.CancelBooking(bookingId);
-
-            if (!cancelled)
-                return false;
-
-            // Check whether another confirmed booking remains for this room.
-            bool hasOtherConfirmedBooking = _context.Bookings.Any(b =>
-                b.RoomId == booking.RoomId &&
-                b.Status == "Confirmed" &&
-                b.Id != bookingId);
-
-            var room = _context.Rooms.Find(booking.RoomId);
-
-            if (room != null)
-            {
-                room.IsAvailable = !hasOtherConfirmedBooking;
-                _context.SaveChanges();
-            }
-
-            return true;
+            return await GetBookingByIdAsync(bookingId);
         }
 
-
-
-        public List<Booking> GetAllBookings()
-        {
-            return _repository.GetAllBookings();
-        }
-
-        public bool CreateBooking(
+        public async Task<bool> CreateBookingAsync(
             int guestId,
             int roomId,
             DateTime checkIn,
             DateTime checkOut)
         {
-            // Validate booking dates.
             if (checkIn.Date < DateTime.Today)
                 return false;
 
             if (checkOut.Date <= checkIn.Date)
                 return false;
 
-            // Check that the guest and room exist.
-            var guest = _context.Guests.Find(guestId);
-            var room = _context.Rooms.Find(roomId);
+            var guest = await _context.Guests.FindAsync(guestId);
+            var room = await _context.Rooms.FindAsync(roomId);
 
             if (guest == null || room == null)
                 return false;
 
-            // Prevent overlapping confirmed bookings for this room.
-            bool hasOverlap = _context.Bookings.Any(b =>
+            bool hasOverlap = await _context.Bookings.AnyAsync(b =>
                 b.RoomId == roomId &&
                 b.Status == "Confirmed" &&
                 checkIn.Date < b.CheckOutDate.Date &&
@@ -98,7 +64,6 @@ namespace HotelManagementEFCore.Services
             if (hasOverlap)
                 return false;
 
-            // Calculate the booking amount.
             int nights = (checkOut.Date - checkIn.Date).Days;
             decimal total = nights * room.PricePerNight;
 
@@ -112,24 +77,55 @@ namespace HotelManagementEFCore.Services
                 Status = "Confirmed"
             };
 
-            _repository.AddBooking(booking);
+            await _repository.AddBookingAsync(booking);
 
             return true;
         }
 
+        public async Task<bool> CancelBookingAsync(int bookingId)
+        {
+            var booking = await _repository.GetBookingByIdAsync(bookingId);
 
-        public bool IsRoomAvailable(int roomId, DateTime checkIn, DateTime checkOut)
+            if (booking == null || booking.Status != "Confirmed")
+                return false;
+
+            bool cancelled = await _repository.CancelBookingAsync(bookingId);
+
+            if (!cancelled)
+                return false;
+
+            bool hasOtherConfirmedBooking = await _context.Bookings.AnyAsync(b =>
+                b.RoomId == booking.RoomId &&
+                b.Status == "Confirmed" &&
+                b.Id != bookingId);
+
+            var room = await _context.Rooms.FindAsync(booking.RoomId);
+
+            if (room != null)
+            {
+                room.IsAvailable = !hasOtherConfirmedBooking;
+                await _context.SaveChangesAsync();
+            }
+
+            return true;
+        }
+
+        public async Task<bool> IsRoomAvailableAsync(
+            int roomId,
+            DateTime checkIn,
+            DateTime checkOut)
         {
             if (checkOut.Date <= checkIn.Date ||
                 checkIn.Date < DateTime.Today)
                 return false;
 
-            bool roomExists = _context.Rooms.Any(r => r.Id == roomId);
+            bool roomExists = await _context.Rooms
+                .AnyAsync(r => r.Id == roomId);
 
             if (!roomExists)
                 return false;
 
-            bool hasOverlap = _context.Bookings.Any(b =>
+            bool hasOverlap = await _context.Bookings.AnyAsync(b =>
                 b.RoomId == roomId &&
                 b.Status == "Confirmed" &&
                 checkIn.Date < b.CheckOutDate.Date &&
@@ -138,5 +134,4 @@ namespace HotelManagementEFCore.Services
             return !hasOverlap;
         }
     }
-    }
-        
+}

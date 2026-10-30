@@ -14,34 +14,32 @@ namespace HotelManagementEFCore.Repositories
             _context = context;
         }
 
-        public List<Booking> GetAllBookings()
+        public async Task<List<Booking>> GetAllBookingsAsync()
         {
-            return _context.Bookings
+            return await _context.Bookings
                 .Include(b => b.Guest)
                 .Include(b => b.Room)
                 .OrderBy(b => b.Id)
-                .ToList();
+                .ToListAsync();
         }
 
-        public Booking? GetBookingById(int id)
+        public async Task<Booking?> GetBookingByIdAsync(int id)
         {
-            return _context.Bookings
+            return await _context.Bookings
                 .Include(b => b.Guest)
                 .Include(b => b.Room)
-                .FirstOrDefault(b => b.Id == id);
+                .FirstOrDefaultAsync(b => b.Id == id);
         }
 
-        public void AddBooking(Booking booking)
+        public async Task AddBookingAsync(Booking booking)
         {
             _context.Bookings.Add(booking);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
         }
 
-
-        public bool CancelBooking(int bookingId)
+        public async Task<bool> CancelBookingAsync(int bookingId)
         {
-            var booking = _context.Bookings
-                .FirstOrDefault(b => b.Id == bookingId);
+            var booking = await GetBookingByIdAsync(bookingId);
 
             if (booking == null)
                 return false;
@@ -51,10 +49,9 @@ namespace HotelManagementEFCore.Repositories
 
             booking.Status = "Cancelled";
 
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
             return true;
         }
-
     }
 }

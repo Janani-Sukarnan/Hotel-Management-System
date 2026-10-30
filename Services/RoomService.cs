@@ -13,12 +13,12 @@ namespace HotelManagementEFCore.Services
             _repository = repository;
         }
 
-        public List<Room> GetAllRooms()
+        public async Task<List<Room>> GetAllRoomsAsync()
         {
-            return _repository.GetAllRooms();
+            return await _repository.GetAllRoomsAsync();
         }
 
-        public bool AddRoom(Room room)
+        public async Task<bool> AddRoomAsync(Room room)
         {
             if (string.IsNullOrWhiteSpace(room.RoomNumber))
                 return false;
@@ -29,21 +29,31 @@ namespace HotelManagementEFCore.Services
             if (room.PricePerNight <= 0)
                 return false;
 
-            if (_repository.GetRoomByNumber(room.RoomNumber) != null)
+            var existingRoom =
+                await _repository.GetRoomByNumberAsync(room.RoomNumber);
+
+            if (existingRoom != null)
                 return false;
 
-            _repository.AddRoom(room);
+            await _repository.AddRoomAsync(room);
+
             return true;
         }
 
-        public Room? SearchRoom(string roomNumber)
+        public async Task<Room?> SearchRoomAsync(string roomNumber)
         {
-            return _repository.GetRoomByNumber(roomNumber);
+            if (string.IsNullOrWhiteSpace(roomNumber))
+                return null;
+
+            return await _repository.GetRoomByNumberAsync(roomNumber);
         }
 
-        public bool DeleteRoom(int id)
+        public async Task<bool> DeleteRoomAsync(int id)
         {
-            return _repository.DeleteRoom(id);
+            if (id <= 0)
+                return false;
+
+            return await _repository.DeleteRoomAsync(id);
         }
     }
 }

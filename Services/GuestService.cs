@@ -13,17 +13,20 @@ namespace HotelManagementEFCore.Services
             _repository = repository;
         }
 
-        public List<Guest> GetAllGuests()
+        public async Task<List<Guest>> GetAllGuestsAsync()
         {
-            return _repository.GetAllGuests();
+            return await _repository.GetAllGuestsAsync();
         }
 
-        public Guest? GetGuestById(int id)
+        public async Task<Guest?> GetGuestByIdAsync(int id)
         {
-            return _repository.GetGuestById(id);
+            if (id <= 0)
+                return null;
+
+            return await _repository.GetGuestByIdAsync(id);
         }
 
-        public bool RegisterGuest(Guest guest)
+        public async Task<bool> RegisterGuestAsync(Guest guest)
         {
             if (string.IsNullOrWhiteSpace(guest.FullName))
                 return false;
@@ -38,10 +41,9 @@ namespace HotelManagementEFCore.Services
                 !guest.Email.Contains('.'))
                 return false;
 
-            _repository.AddGuest(guest);
+            await _repository.AddGuestAsync(guest);
+
             return true;
         }
     }
 }
-
-

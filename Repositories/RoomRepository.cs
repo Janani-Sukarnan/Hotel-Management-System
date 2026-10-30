@@ -14,34 +14,36 @@ namespace HotelManagementEFCore.Repositories
             _context = context;
         }
 
-        public List<Room> GetAllRooms()
+        public async Task<List<Room>> GetAllRoomsAsync()
         {
-            return _context.Rooms
+             return await _context.Rooms
                 .OrderBy(r => r.RoomNumber)
-                .ToList();
-        }
+                .ToListAsync    ();
+        } 
 
-        public Room? GetRoomById(int id)
+        public async Task<Room?> GetRoomByIdAsync(int id)
         {
-            return _context.Rooms
-                .FirstOrDefault(r => r.Id == id);
+            return await _context.Rooms
+                .FirstOrDefaultAsync(r => r.Id == id);
         }
+         
+        
 
-        public Room? GetRoomByNumber(string roomNumber)
+        public async Task<Room?> GetRoomByNumberAsync(string roomNumber)
         {
-            return _context.Rooms
-                .FirstOrDefault(r => r.RoomNumber == roomNumber);
+            return await _context.Rooms
+                .FirstOrDefaultAsync(r => r.RoomNumber == roomNumber);
         }
 
-        public void AddRoom(Room room)
+        public async Task AddRoomAsync(Room room)
         {
             _context.Rooms.Add(room);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
         }
-
-        public bool DeleteRoom(int id)
+        //for delete use Task<bool> DeleteRoomAsync(int id)
+        public async Task<bool> DeleteRoomAsync(int id)
         {
-            var room = GetRoomById(id);
+            var room = await GetRoomByIdAsync(id);
 
             if (room == null)
                 return false;
